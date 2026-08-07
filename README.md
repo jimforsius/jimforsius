@@ -1,6 +1,6 @@
 ## Jim Forsius
 
-Founder, designer, creative director, builder. Based in Finland.
+Founder, designer, creative director, builder.
 
 Founder of **[Cythère](https://cythere.co)** — an independent studio for brand,
 web, film and the engine that makes them move. One studio, end to end: no
@@ -29,7 +29,7 @@ Direction, curation, design and code.
 
 ---
 
-Finland · MMXXVI
+MMXXVI
 
 *Everything published here is readable, not reusable. See each repository's
 licence.*
