@@ -2,34 +2,23 @@
 
 Founder, designer, creative director, builder.
 
-Founder of **[Cythère](https://cythere.co)** — an independent studio for brand,
-web, film and the engine that makes them move. One studio, end to end: no
-agency, no handoff, no seams between the identity, the site and the film.
+Cythère — **[cythere.co](https://cythere.co)**. Every medium, one studio.
+Brand, web and film held in one place, nothing handed off, so nothing gets
+lost on the way.
 
 Most brands break at the seams. Strategy from one company, identity from
 another, the site and the film from two more — and none of them quite agree.
 Crossing disciplines is not indecision. It is the job.
 
-### Work
+**[cythere](https://github.com/jimforsius/cythere)** · the studio site. Static
+HTML, CSS and JavaScript — no framework, no build step, no dependencies.
 
-**[cythere](https://github.com/jimforsius/cythere)** · the studio site —
-[cythere.co](https://cythere.co). Static HTML, CSS and JavaScript. No
-framework, no build step, no dependencies. Read it, don't copy it.
-
-**Automated Media Engine** · an AI production engine that turns one brief into
-a month of on-brand short-form video. A studio's taste, at machine scale —
-[cythere.co/engine](https://cythere.co/engine).
+**[Automated Media Engine](https://cythere.co/engine)** · an AI-powered system
+that turns one brief into a month of on-brand short-form video.
 
 **[jimforsius.com](https://jimforsius.com)** · a living photographic archive.
 Direction, curation, design and code.
 
-### Elsewhere
+[Instagram](https://www.instagram.com/cytheremedia/) · jim@cythere.co
 
-[cythere.co](https://cythere.co) · [Instagram](https://www.instagram.com/cytheremedia/) · jim@cythere.co
-
----
-
-MMXXVI
-
-*Everything published here is readable, not reusable. See each repository's
-licence.*
+Everything here is readable, not reusable. See each repository's licence.
