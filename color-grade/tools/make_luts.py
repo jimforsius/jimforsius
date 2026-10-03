@@ -1,7 +1,11 @@
 """Generoi S-Log3 / S-Gamut3.Cine -> Rec.709 (gamma 2.4) look-LUTit.
 
 Ajo:  python3 make_luts.py   (tarvitsee numpy)
-Tulos: ../luts/*.cube (33^3, data levels 0-1)
+Tulos: ../luts/*.cube (33^3)
+
+Input-normalisointi: Resolve/Premiere skaalaavat Sonyn video-level-tiedoston
+(10-bit 64..940) arvoon 0..1, joten LUTin syöte x vastaa koodiarvoa
+CV = 64 + x * 876 (S-Log3: musta CV 95, 18 % harmaa CV 420 = 41 IRE).
 """
 import numpy as np
 from pathlib import Path
@@ -11,17 +15,20 @@ OUT = Path(__file__).resolve().parent.parent / "luts"
 
 
 # --- S-Log3 -> scene linear (Sony tech summary) -----------------------------
+CV_LO, CV_RANGE = 64.0, 876.0  # video levels -> 0..1
+
+
 def slog3_to_lin(x):
-    cv = x * 1023.0
+    cv = CV_LO + x * CV_RANGE
     hi = 10.0 ** ((cv - 420.0) / 261.5) * (0.18 + 0.01) - 0.01
     lo = (cv - 95.0) * 0.01125 / (171.2102946929 - 95.0)
     return np.where(cv >= 171.2102946929, hi, lo)
 
 
 def lin_to_slog3(y):
-    hi = (420.0 + np.log10((y + 0.01) / (0.18 + 0.01)) * 261.5) / 1023.0
-    lo = (y * (171.2102946929 - 95.0) / 0.01125 + 95.0) / 1023.0
-    return np.where(y >= 0.01125, hi, lo)
+    hi = 420.0 + np.log10(np.maximum(y + 0.01, 1e-6) / (0.18 + 0.01)) * 261.5
+    lo = y * (171.2102946929 - 95.0) / 0.01125 + 95.0
+    return (np.where(y >= 0.01125, hi, lo) - CV_LO) / CV_RANGE
 
 
 # --- gamut: S-Gamut3.Cine -> Rec.709, both D65 ------------------------------
@@ -133,9 +140,10 @@ LOOKS = {
         high_ab=(0.001, 0.012),      # lämmin/kermainen yläpää
         lift=0.0, white=1.0,
     ),
-    # D: sateinen moody, matte black, teal-vihreä, punainen aksentti
-    "Rain_MoodyMatte": dict(
-        exposure=-0.35, mid_out=0.13, contrast=1.10, peak=0.90, toe=0.006,
+    # D: sateinen moody, teal-vihreä, punainen aksentti. Mustat oikeasti mustat
+    # (referenssissä matte ~3 %: saat sen takaisin asettamalla lift=0.03)
+    "Rain_Moody": dict(
+        exposure=-0.35, mid_out=0.12, contrast=1.15, peak=0.90, toe=0.012,
         sat=0.78,
         hue_shift=[(135, 45, 22.0)],  # vihreä -> teal
         hue_sat=[(30, 35, 1.35),      # punaiset vanteet/takavalot esiin
@@ -146,7 +154,23 @@ LOOKS = {
         high_desat=0.60, high_desat_start=0.70,
         shadow_ab=(-0.010, -0.010),   # sinivihreä varjo
         high_ab=(-0.004, 0.000),
-        lift=0.030, white=0.93,       # matte black + ei puhdasta valkoista
+        lift=0.0, white=0.93,         # musta 0, ei puhdasta valkoista
+    ),
+    # E ("Dream Big"): päivä, musta 0, highlightit ei klippaa, muted oliivi-vihreä,
+    # lämmin iho vs. syaani vesi, harmaa ~28 % (tummempi kuin normaali Rec.709)
+    "Day_DreamBig": dict(
+        exposure=-0.45, mid_out=0.115, contrast=1.25, peak=0.97, toe=0.012,
+        sat=0.85,
+        hue_shift=[(142, 40, -12.0)],  # vihreä -> oliivi
+        hue_sat=[(45, 40, 1.05),       # iho / oranssi
+                 (142, 40, 0.55),      # vihreät muted
+                 (200, 30, 1.10),      # syaani vesi säilyy
+                 (262, 35, 0.65)],     # sininen taivas hillitty
+        shadow_desat=0.35, shadow_desat_end=0.35,
+        high_desat=0.55, high_desat_start=0.78,
+        shadow_ab=(0.002, 0.005),      # lämmin low-mid (iho)
+        high_ab=(-0.002, -0.003),      # neutraali/viileä yläpää
+        lift=0.0, white=1.0,
     ),
 }
 

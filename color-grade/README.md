@@ -1,6 +1,6 @@
 # Color grade -analyysi + S-Log3-kaava
 
-Analysoitu 4 näyttötallennetta (Instagram/Reels), 222 framea (5 fps). Mittasin jokaisesta framesta
+Analysoitu 5 näyttötallennetta (Instagram/Reels), 339 framea (5 fps). Mittasin jokaisesta framesta
 luminanssijakauman, mustan ja valkoisen tason, värisävyn eri sävyalueilla (Lab a*/b*),
 saturaation suhteessa kirkkauteen, mitkä värisävyt ovat kuvassa jäljellä sekä keskustan ja
 reunojen kirkkauseron. UI-elementit (sydämet, tekstit) ja letterbox-palkit on rajattu pois.
@@ -14,8 +14,11 @@ reunojen kirkkauseron. UI-elementit (sydämet, tekstit) ja letterbox-palkit on r
 | **B** | Maybachin sisätila, ambient-LEDit (pystykuva) |
 | **C** | Abu Dhabi / F1 -yö, autotalli, konsertti, auringonlasku |
 | **D** | GT3 RS sateessa, 2.39:1-crop |
+| **E** | "Dream Big": Hollywood Hills -villa yöllä → sisätila → päivä, uima-allas, Maybach |
 
 ---
+
+> Koko estetiikan analyysi (miksi tämä näyttää niin hyvältä): [`AESTHETIC.md`](AESTHETIC.md)
 
 ## 1. Mikä se fiilis on
 
@@ -152,25 +155,39 @@ takavalo) on ainoa lämmin ja jätetty täyteen saturaatioon.
 
 ## 7. Valmiit LUTit
 
-`luts/` sisältää kaksi 33³ .cube-LUTia, joiden **input on S-Log3 / S-Gamut3.Cine** ja
-**output Rec.709 Gamma 2.4**. Ne tekevät koko ketjun (CST + tonemappaus + look) yhdellä kertaa:
+Lataa: [`luts/`](luts/). Kolme 33³ .cube-LUTia, joiden **input on S-Log3 / S-Gamut3.Cine**
+ja **output Rec.709 Gamma 2.4**. Ne tekevät koko ketjun (CST + tonemappaus + look) yhdellä kertaa:
 
-- `SLog3_SG3C_to_709_Night_QuietLuxury.cube`: A/B/C-yölook
-- `SLog3_SG3C_to_709_Rain_MoodyMatte.cube`: D-sadelook
+- `SLog3_SG3C_to_709_Night_QuietLuxury.cube`: A/B/C/E-yölook
+- `SLog3_SG3C_to_709_Rain_Moody.cube`: D-sadelook, **mustat 0 %** (referenssin 3 %:n matte
+  saadaan takaisin asettamalla `lift=0.03`)
+- `SLog3_SG3C_to_709_Day_DreamBig.cube`: E-päivälook (musta 0, ei klippausta, muted vihreä,
+  lämmin iho vs. syaani vesi)
 
-**Käyttö Resolvessa:** node 1 = valotus + WB (log-kuvalle, Offset), node 2 = LUT. Älä laita
-CST:tä ennen LUTia, koska LUT odottaa raakaa S-Log3:a. Jos kuva on liian tumma, nosta valotusta
-**ennen** LUTia, älä sen jälkeen. Hienosäätö (vinjetti, glow, grain) tehdään LUTin jälkeen.
+**Kaikissa kolmessa S-Log3-musta (CV 95) → 0 % ulos.** Jos kuva näyttää harmaalta, LUT ei ole
+päällä tai syöte ei ole S-Log3:a (esim. Resolve Color Managed muuntaa ennen LUTia, tai kamera
+oli S-Cinetonella).
+
+**Input-tasot:** LUTit olettavat Resolven/Premieren normaalin käsittelyn, eli Sonyn video-level
+-tiedosto (64–940) skaalattuna 0–1:ksi. 18 % harmaa = CV 420 = 41 IRE.
+
+**Käyttö Resolvessa:** projekti DaVinci YRGB (ei Color Managed). Node 1 = valotus + WB
+(log-kuvalle, Offset), node 2 = LUT. Älä laita CST:tä ennen LUTia. Jos kuva on liian tumma,
+nosta valotusta **ennen** LUTia (Offset), älä sen jälkeen. Hienosäätö (vinjetti, glow, grain)
+tehdään LUTin jälkeen. **Premiere:** Lumetri → Basic Correction → Input LUT = tämä .cube.
 
 Mitattu harmaaskaala (oikein valotettu 18 % harmaa = stoppi 0):
 
 | stoppia | −6 | −4 | −2 | −1 | **0** | +1 | +2 | +4 | +6 |
 |---|---|---|---|---|---|---|---|---|---|
 | Night | 0,4 % | 1,8 % | 7,3 % | 14 % | **24 %** | 37 % | 53 % | 84 % | 97 % |
-| Rain | 4,3 % | 8,7 % | 20 % | 28 % | **37 %** | 48 % | 59 % | 78 % | 86 % |
+| Rain | 1,0 % | 3,4 % | 14 % | 23 % | **33 %** | 45 % | 58 % | 77 % | 86 % |
+| Day | 1,2 % | 4,7 % | 14 % | 22 % | **33 %** | 47 % | 62 % | 86 % | 96 % |
 
-`testikartta.png`: vasemmalla S-Log3-syöte (ColorChecker −2/0/+2 st, harmaa-ramppi, sävy-ramppi),
-keskellä Night ja oikealla Rain.
+(Normaali Rec.709-LUT laittaa harmaan noin 41 %:iin. Nämä ovat tarkoituksella tummempia.)
+
+`testikartta.png`: vasemmalta S-Log3-syöte (ColorChecker −2/0/+2 st, harmaa-ramppi, sävy-ramppi),
+Night, Rain, Day.
 
 LUTit generoidaan skriptillä `tools/make_luts.py` (numpy). Kaikki parametrit (valotus,
 kontrasti, toe, sävykohtainen saturaatio, split tone, lift/white) ovat `LOOKS`-sanakirjassa,
